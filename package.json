@@ -1,0 +1,20 @@
+{
+  "name": "node-modular-integration-server",
+  "version": "1.0.0",
+  "description": "This repository contaions a NodeJS and express server with a modular architecture that is capable of integrating with many services.",
+  "homepage": "https://github.com/JaysonHauschild/NodeJS-Modular-Integration-Server#readme",
+  "bugs": {
+    "url": "https://github.com/JaysonHauschild/NodeJS-Modular-Integration-Server/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JaysonHauschild/NodeJS-Modular-Integration-Server.git"
+  },
+  "license": "MIT",
+  "author": "Jayson Hauschild",
+  "type": "commonjs",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  }
+}
