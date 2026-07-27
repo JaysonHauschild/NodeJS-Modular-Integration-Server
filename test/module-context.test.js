@@ -16,6 +16,11 @@ function createServices() {
     logger,
     apiKeys: { get() {}, clear() {} },
     httpClient: { request() {} },
+    eventBus: {
+      forModule() { return { create() {}, emit() {}, on() {} }; },
+      removeModule() {},
+      clear() {},
+    },
     internalServerMethod() {},
   };
 }
@@ -23,13 +28,18 @@ function createServices() {
 describe('module context', () => {
   test('exposes only approved server capabilities', () => {
     const services = createServices();
-    const context = new ModuleContext({ moduleName: 'weather', ...services });
+    const context = new ModuleContext({
+      moduleName: 'weather',
+      ...services,
+      events: services.eventBus.forModule('weather'),
+    });
 
     assert.equal(context.moduleName, 'weather');
     assert.equal(context.config, services.config);
     assert.equal(context.logger, services.logger);
     assert.equal(context.apiKeys, services.apiKeys);
     assert.equal(context.httpClient, services.httpClient);
+    assert.equal(typeof context.events.emit, 'function');
     assert.equal(context.internalServerMethod, undefined);
     assert.equal(Object.isFrozen(context), true);
     assert.throws(() => { context.server = {}; }, TypeError);

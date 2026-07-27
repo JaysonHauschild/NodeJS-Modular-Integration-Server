@@ -3,6 +3,7 @@
 const assert = require('node:assert/strict');
 const { after, before, describe, test } = require('node:test');
 const { loadConfig } = require('../src/config');
+const { createApiKeyStore } = require('../src/api-keys');
 const quietLogger = { info() {}, error() {}, child() { return this; } };
 
 describe('integration server', () => {
@@ -12,7 +13,8 @@ describe('integration server', () => {
   before(async () => {
     const config = { ...loadConfig({ PORT: '3000' }), host: '127.0.0.1', port: 0 };
     const { createApp } = require('../src/app');
-    const { app, registry } = createApp({ config, logger: quietLogger });
+    const apiKeys = createApiKeyStore({ environment: { OPENWEATHER_API_KEY: 'test-api-key' } });
+    const { app, registry } = createApp({ config, logger: quietLogger, apiKeys });
     await registry.initialize();
     const server = app.listen(0, config.host);
     await new Promise((resolve) => server.once('listening', resolve));
@@ -30,7 +32,7 @@ describe('integration server', () => {
     const body = await response.json();
     assert.equal(response.status, 200);
     assert.equal(body.status, 'ok');
-    assert.deepEqual(body.modules, ['example']);
+    assert.deepEqual(body.modules, ['example', 'openweather']);
     assert.ok(response.headers.get('x-request-id'));
   });
 

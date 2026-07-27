@@ -3,6 +3,7 @@
 const express = require('express');
 const { createApiKeyStore } = require('./api-keys');
 const { createHttpClient } = require('./http-client');
+const { createEventBus } = require('./event-bus');
 const { createLogger } = require('./logger');
 const { errorHandler, notFound } = require('./middleware/errors');
 const { requestContext } = require('./middleware/request-context');
@@ -14,6 +15,7 @@ function createApp({
   logger = createLogger(),
   modules = createDefaultModules(),
   apiKeys = createApiKeyStore(),
+  eventBus = createEventBus({ logger }),
   httpClient = createHttpClient({
     apiKeys,
     logger,
@@ -22,7 +24,13 @@ function createApp({
   }),
 }) {
   const app = express();
-  const registry = createModuleRegistry(modules, { config, logger, apiKeys, httpClient });
+  const registry = createModuleRegistry(modules, {
+    config,
+    logger,
+    apiKeys,
+    httpClient,
+    eventBus,
+  });
 
   app.disable('x-powered-by');
   app.use(requestContext);

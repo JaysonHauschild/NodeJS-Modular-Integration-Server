@@ -3,11 +3,12 @@
 class ModuleContext {
   #apiKeys;
   #config;
+  #events;
   #httpClient;
   #logger;
   #moduleName;
 
-  constructor({ moduleName, config, logger, apiKeys, httpClient }) {
+  constructor({ moduleName, config, logger, apiKeys, httpClient, events }) {
     if (typeof moduleName !== 'string' || moduleName.length === 0) {
       throw new TypeError('ModuleContext requires a module name');
     }
@@ -23,12 +24,16 @@ class ModuleContext {
     if (!httpClient || typeof httpClient.request !== 'function') {
       throw new TypeError('ModuleContext requires an HTTP client');
     }
+    if (!events || typeof events.create !== 'function' || typeof events.emit !== 'function') {
+      throw new TypeError('ModuleContext requires an event API');
+    }
 
     this.#moduleName = moduleName;
     this.#config = config;
     this.#logger = logger;
     this.#apiKeys = apiKeys;
     this.#httpClient = httpClient;
+    this.#events = events;
     Object.freeze(this);
   }
 
@@ -50,6 +55,10 @@ class ModuleContext {
 
   get httpClient() {
     return this.#httpClient;
+  }
+
+  get events() {
+    return this.#events;
   }
 }
 

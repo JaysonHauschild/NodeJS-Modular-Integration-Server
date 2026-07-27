@@ -32,6 +32,7 @@ function createModuleRegistry(modules, serverServices) {
             logger: serverServices.logger.child?.({ integration: module.name }) || serverServices.logger,
             apiKeys: serverServices.apiKeys,
             httpClient: serverServices.httpClient,
+            events: serverServices.eventBus.forModule(module.name),
           });
           await module.initialize?.(moduleContext);
           initialized.push({ module, context: moduleContext });
@@ -56,9 +57,11 @@ function createModuleRegistry(modules, serverServices) {
             error: error.message,
           });
         }
+        serverServices.eventBus.removeModule(module.name);
       }
       initialized.length = 0;
       serverServices.apiKeys.clear();
+      serverServices.eventBus.clear();
     },
   };
 }

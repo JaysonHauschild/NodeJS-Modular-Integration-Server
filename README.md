@@ -52,10 +52,54 @@ async initialize(context) {
   context.logger;      // logger labeled with this module's name
   context.apiKeys;     // secure API-key handler
   context.httpClient;  // shared outbound HTTP client
+  context.events;      // namespaced inter-module event API
 }
 ```
 
 Internal registry and server methods are not placed on this object, and the context cannot be extended or reassigned. This is an API boundary for integrations, not a security sandbox: installed Node.js modules still execute in the server process and should be treated as trusted code.
+
+## Module events
+
+Modules communicate without importing or calling one another through the asynchronous event API. Every event name must use `namespace:event-name`. A module may create and emit only events whose namespace exactly matches its registered module name, while other modules may listen using the full event name.
+
+The producing module creates its event during initialization and emits it when needed:
+
+```js
+async initialize({ events }) {
+  this.events = events;
+  events.create('openweather:bad-weather');
+}
+
+async checkWeather(weather) {
+  await this.events.emit('openweather:bad-weather', {
+    city: weather.name,
+    conditions: weather.weather.map(({ main }) => main),
+  });
+}
+```
+
+A separate module subscribes without receiving a reference to the weather module:
+
+```js
+async initialize({ events, logger }) {
+  this.unsubscribe = events.on(
+    'openweather:bad-weather',
+    async ({ city, conditions }, event) => {
+      logger.info('Bad weather received', {
+        city,
+        conditions,
+        emittedAt: event.emittedAt,
+      });
+    },
+  );
+}
+
+async shutdown() {
+  this.unsubscribe?.();
+}
+```
+
+`events.once(name, handler)` creates a one-use listener. `emit` waits for all listeners and returns `{ delivered, failed }`; one failing listener is logged and does not prevent the others from running. Subscriptions and owned event definitions are removed automatically when their module shuts down. A listener can subscribe before the producing module creates an event, but emitting an event that has not been created is rejected.
 
 ## API keys
 
